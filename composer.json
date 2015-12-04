@@ -1,0 +1,21 @@
+{
+    "name": "nocon/nocon-paypal-nvp",
+    "type": "library",
+    "description": "Communication class for PayPal NVP (Name Value Pair) API access in the NoCon framework.",
+    "keywords":["paypal", "nocon", "nvp", "communication", "message"],
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Bryan Nielsen",
+            "email": "bnielsen1965@gmail.com"
+        }
+    ],
+    "require": {
+      "php": ">=5.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "NoCon\\": "src/NoCon"
+        }
+    }
+}
