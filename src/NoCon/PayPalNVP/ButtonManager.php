@@ -25,26 +25,28 @@ namespace NoCon\PayPalNVP;
 /**
  * ButtonManager class provides functions to make PayPal NVP ButtonManager calls.
  * 
+ * https://developer.paypal.com/docs/classic/api/#pps
+ * 
  * @author Bryan Nielsen <bnielsen1965@gmail.com>
  * @copyright (c) 2015, Bryan Nielsen
  * 
  */
 class ButtonManager extends PayPalNVP {
     /**
-     * @var integer Default start time.
+     * @var string Default start date.
      */
-    const STARTTIME = 915148800; // 1999-01-01T00:00:00Z
+    const STARTDATE = '1999-01-01T00:00:00Z';
+    
+    
+    protected $buttons;
     
     
     /**
      * Button manager button search.
      * 
-     * @return type
+     * @return array An array of button details.
      */
-    public function bmButtonSearch($startTime = self::STARTTIME, $endTime = null) {
-        $startDate = gmdate('Y-m-d\TH:i:s\Z', $startTime);
-        $endDate = (empty($endTime) ? null : gmdate('Y-m-d\TH:i:s\Z', $endTime));
-        
+    public function bmButtonSearch($startDate = self::STARTDATE, $endDate = null) {
         $args = array(
             'METHOD'        => 'BMButtonSearch',
             'STARTDATE'     => $startDate
@@ -54,7 +56,65 @@ class ButtonManager extends PayPalNVP {
             $args['ENDDATE'] = $endDate;
         }
         
-        return $this->nvpCall($args);
+        $response = $this->nvpCall($args);
+        $this->extractButtons($response);
+        return $this->buttons;
+    }
+    
+    
+    public function bmCreateButton($parameters) {
+        $args = array_merge($parameters, array(
+            'METHOD'        => 'BMCreateButton',
+        ));
+        
+        $response = $this->nvpCall($args);
+        print_r($response);
+        return $response;
+    }
+    
+    
+    public function bmUpdateButton($parameters) {
+        $args = array_merge($parameters, array(
+            'METHOD'        => 'BMUpdateButton',
+        ));
+        
+        $response = $this->nvpCall($args);
+        print_r($response);
+        return $response;
+    }
+    
+    
+    /**
+     * Extract the button details from the response.
+     * 
+     * @param array $response An array of button details.
+     */
+    private function extractButtons($response) {
+        $match = array();
+        $buttons = array();
+        foreach ( $response as $name => $value ) {
+            if ( preg_match('|^L_HOSTEDBUTTONID([0-9]+)$|', $name, $match) ) {
+                $buttons[$match[1]] = $value;
+            }
+        }
+        
+        array_walk($buttons, function(&$button, $index) use($response) {
+            $button = array('id' => $button);
+            
+            if ( isset($response['L_BUTTONTYPE' . $index]) ) {
+                $button['buttonType'] = $response['L_BUTTONTYPE' . $index];
+            }
+            
+            if ( isset($response['L_ITEMNAME' . $index]) ) {
+                $button['itemName'] = $response['L_ITEMNAME' . $index];
+            }
+            
+            if ( isset($response['L_MODIFYDATE' . $index]) ) {
+                $button['modifyDate'] = $response['L_MODIFYDATE' . $index];
+            }
+        });
+        
+        $this->buttons = $buttons;
     }
     
     
