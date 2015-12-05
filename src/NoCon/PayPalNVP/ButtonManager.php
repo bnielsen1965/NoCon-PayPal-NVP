@@ -23,7 +23,7 @@
 namespace NoCon\PayPalNVP;
 
 /**
- * Curl class provides curl functions to make PayPal NVP calls.
+ * ButtonManager class provides functions to make PayPal NVP ButtonManager calls.
  * 
  * @author Bryan Nielsen <bnielsen1965@gmail.com>
  * @copyright (c) 2015, Bryan Nielsen
@@ -34,6 +34,7 @@ class ButtonManager extends PayPalNVP {
      * @var integer Default start time.
      */
     const STARTTIME = 915148800; // 1999-01-01T00:00:00Z
+    
     
     /**
      * Button manager button search.

@@ -23,7 +23,7 @@
 namespace NoCon\PayPalNVP;
 
 /**
- * Curl class provides curl functions to make PayPal NVP calls.
+ * PayPalNVP class provides base functions to make PayPal NVP calls.
  * 
  * @author Bryan Nielsen <bnielsen1965@gmail.com>
  * @copyright (c) 2015, Bryan Nielsen
@@ -31,20 +31,65 @@ namespace NoCon\PayPalNVP;
  */
 class PayPalNVP {
     
+    /**
+     * @var string The default PayPal NVP API version to use.
+     */
     const VERSION                       = '124.0';
+    
+    /**
+     * @var string The default PayPal NVP API live endpoint url when using signature authentication.
+     */
     const ENDPOINT_SIGNATURE            = 'https://api-3t.paypal.com/nvp';
+    
+    /**
+     * @var string The default PayPal NVP API sandbox endpoint url when using signature authentication.
+     */
     const ENDPOINT_SIGNATURE_SANDBOX    = 'https://api-3t.sandbox.paypal.com/nvp';
+    
+    /**
+     * @var string The default PayPal NVP API live endpoint url when using certificate authentication.
+     */
     const ENDPOINT_CERTIFICATE          = 'https://api.paypal.com/nvp';
+    
+    /**
+     * @var string The default PayPal NVP API sandbox endpoint url when using certificate authentication.
+     */
     const ENDPOINT_CERTIFICATE_SANDBOX  = 'https://api.sandbox.paypal.com/nvp';
     
     
+    /**
+     * @var string Live status. When false the sandbox is assumed.
+     */
     protected $live;
+    
+    /**
+     * @var string The current user name.
+     */
     protected $user;
+    
+    /**
+     * @var string The current user password.
+     */
     protected $password;
+    
+    /**
+     * @var string The current user certificate.
+     */
     protected $certificate;
+    
+    /**
+     * @var string The current user signature.
+     */
     protected $signature;
 
+    /**
+     * @var array The set of nvp parameters from the last response.
+     */
     protected $lastResponse;
+    
+    /**
+     * @var array The current set of error messages.
+     */
     protected $errors;
 
     /**
@@ -64,18 +109,15 @@ class PayPalNVP {
     public function __construct($config, $live = true) {
         $this->setLive($live);
         $this->setConfiguration($config);
-        $errors = array();
+        $this->clearErrors();
     }
     
     
-    public function getDefaults() {
-        return array(
-            'VERSION' => self::VERSION,
-            'URL' => null,
-        );
-    }
-    
-    
+    /**
+     * Set the configuration settings for the PayPal NVP API.
+     * 
+     * @param array $config Configuration settings.
+     */
     public function setConfiguration($config) {
         $config = array_merge($this->getDefaults(), $config);
         foreach ($config as $field => $value) {
@@ -110,26 +152,66 @@ class PayPalNVP {
     }
     
     
+    /**
+     * Get the configuration default settings for the PayPal NVP API.
+     * 
+     * @return array Configuration defaults.
+     */
+    public function getDefaults() {
+        return array(
+            'VERSION' => self::VERSION,
+            'URL' => null,
+        );
+    }
+    
+    
+    /**
+     * Set the live state for the PayPal NVP API calls. If live is false then
+     * it is assumed the sandbox will be used.
+     * 
+     * @param boolean $live The live state to set.
+     */
     public function setLive($live) {
         $this->live = $live;
     }
     
     
+    /**
+     * Get the current live state for the PayPal NVP API calls.
+     * 
+     * @return boolean The current live state.
+     */
     public function getLive() {
         return $this->live;
     }
     
     
+    /**
+     * Set the version of the PayPal NVP API that should be used.
+     * 
+     * @param string $version The PayPal NVP API version to use.
+     */
     public function setVersion($version = self::VERSION) {
         $this->version = $version;
     }
     
     
+    /**
+     * Get the current version of the PayPal NVP API that will be used.
+     * 
+     * @return string The current version.
+     */
     public function getVersion() {
         return $this->version;
     }
     
     
+    /**
+     * Set the URL to use for PayPal NVP API endpoint. If no URL is provided then
+     * a default value is used based on the credentials provided and the live status.
+     * 
+     * @param string $url Optional URL to use for PayPal NVP API endpoint.
+     */
     public function setUrl($url = null) {
         if ( empty($url) ) {
             if ( $this->live ) {
@@ -144,46 +226,91 @@ class PayPalNVP {
     }
     
     
+    /**
+     * Get the current PayPal NVP API endpoint that will be used.
+     * 
+     * @return string The PayPal NVP API endpoint URL.
+     */
     public function getUrl() {
         return $this->url;
     }
 
 
+    /**
+     * Set the user name to use in the PayPal NVP API calls.
+     * 
+     * @param string $user The user name.
+     */
     public function setUser($user) {
         $this->user = $user;
     }
     
     
+    /**
+     * Set the user password to use in the PayPal NVP API calls.
+     * 
+     * @param string $password The user password.
+     */
     public function setPassword($password) {
         $this->password = $password;
     }
     
     
+    /**
+     * Set the user signature to use in the PayPal NVP API calls when using
+     * signature based authentication.
+     * 
+     * @param string $signature The signature string.
+     */
     public function setSignature($signature) {
         $this->signature = $signature;
     }
     
     
+    /**
+     * Set the user certificate to use in the PayPal NVP API calls when using
+     * certificate based authentication.
+     * 
+     * @param string $certificate The certificate string.
+     */
     public function setCertificate($certificate) {
         $this->certificate = $certificate;
     }
     
     
+    /**
+     * Get the name value pair response array for the last PayPal NVP API call.
+     * 
+     * @return array The last response name value pairs.
+     */
     public function getLastResponse() {
         return $this->lastResponse;
     }
     
     
+    /**
+     * Clear all errors.
+     */
     private function clearErrors() {
         $this->errors = array();
     }
     
     
+    /**
+     * Set a new error message in the errors array.
+     * 
+     * @param string $error An error message.
+     */
     private function setError($error) {
         $this->errors[] = $error;
     }
     
     
+    /**
+     * Get the current set of error messages.
+     * 
+     * @return array An array of error messages.
+     */
     public function getErrors() {
         return $this->errors;
     }
@@ -288,9 +415,4 @@ class PayPalNVP {
         }
     }
     
-    
-    
-    
-    
-
 }
