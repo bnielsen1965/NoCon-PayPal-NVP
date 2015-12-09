@@ -354,6 +354,20 @@ class PayPalNVP {
     
     
     /**
+     * Check if the last call was successful.
+     * 
+     * @return boolean True if the last call was successful.
+     */
+    public function callSuccess() {
+        return (
+            isset($this->lastResponse['ACK']) && in_array($this->lastResponse['ACK'], array('Success', 'SuccessWithWarning')) ?
+            true :
+            false
+        );
+    }
+    
+    
+    /**
      * Process curl failure during an API call.
      * 
      * @param resource $curl The curl resource.
