@@ -92,19 +92,16 @@ class PayPalNVP {
      */
     protected $errors;
 
+    
     /**
-     * Construct a User instance connected to the PDO source specified by the
-     * passed configuration parameters.
+     * Construct an instance of the PayPalNVP class.
      * 
-     * The configuration array is expected to be an associative array with the
-     * fields used in the PDO construction...
-     * dsn = The dsn string for the PDO connection.
-     * username = The username to use in the PDO connection.
-     * password = The password to use in the PDO connection.
-     * options = An array of PDO connection options.
+     * The configuration array should include the USER and PWD settings for the 
+     * PayPal business account API credentials as well as a SIGNATURE or CERTIFICATE
+     * setting from the PayPal API setup.
      * 
-     * @param array $config The PDO connection configuration values.
-     * @throws \Exception
+     * @param array $config An array of configuration settings for all NVP calls.
+     * @param boolean $live Optional, the live status.
      */
     public function __construct($config, $live = true) {
         $this->setLive($live);
@@ -317,6 +314,37 @@ class PayPalNVP {
     
     
     /**
+     * Get the common arguments that are used for all NVP calls based on current configuration.
+     * 
+     * @return array Associative array of common NVP call arguments.
+     */
+    public function getCallArgs() {
+        $callArgs = array();
+        
+        if ( !empty($this->user) ) {
+            $callArgs['USER'] = $this->user;
+        }
+        
+        if ( !empty($this->password) ) {
+            $callArgs['PWD'] = $this->password;
+        }
+        
+        if ( !empty($this->version) ) {
+            $callArgs['VERSION'] = $this->version;
+        }
+        
+        if ( !empty($this->certificate) ) {
+            $callArgs['CERTIFICATE'] = $this->certificate;
+        }
+        else if ( !empty($this->signature) ) {
+            $callArgs['SIGNATURE'] = $this->signature;
+        }
+    
+        return $callArgs;
+    }
+    
+    
+    /**
      * Execute an NVP API call.
      * 
      * @param array $args The arguements for the API call.
@@ -327,18 +355,7 @@ class PayPalNVP {
         $this->lastResponse = null;
         $this->clearErrors();
         
-        $callArgs = array(
-            'USER'      => $this->user,
-            'PWD'       => $this->password,
-            'VERSION'   => $this->version,
-        );
-        
-        if ( !empty($this->certificate) ) {
-            $callArgs['CERTIFICATE'] = $this->certificate;
-        }
-        else {
-            $callArgs['SIGNATURE'] = $this->signature;
-        }
+        $callArgs = $this->getCallArgs();
     
         $curl = new \NoCon\PayPalNVP\Curl();
 
@@ -390,19 +407,22 @@ class PayPalNVP {
         $this->lastResponse = $args;
         $this->processNVPErrors($args);
         
-        switch ( $args['ACK'] ) {
-            case 'Success':
-            case 'SuccessWithWarning':
-                break;
-            
-            case 'Failure':
-            case 'FailureWithWarning':
-                throw new \Exception('API failure.');
-            
-            default:
-                $this->setError('Unknown ACK: ' . $args['ACK']);
-                throw new \Exception('API failure, no ACK.');
+        if ( isset($args['ACK']) ) {
+            switch ( $args['ACK'] ) {
+                case 'Success':
+                case 'SuccessWithWarning':
+                    break;
+
+                case 'Failure':
+                case 'FailureWithWarning':
+                    throw new \Exception('API failure.');
+
+                default:
+                    $this->setError('Unknown ACK: ' . $args['ACK']);
+                    throw new \Exception('API failure, no ACK.');
+            }
         }
+        
         return $args;
     }
     

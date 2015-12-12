@@ -50,13 +50,24 @@ class ButtonManager extends PayPalNVP {
      * @param string $subType Optional button subtype.
      * @return boolean|array False on failure or the new button details.
      */
-    public function createButton($name, $amount, $type = 'BUYNOW', $subType = 'PRODUCTS') {
-        $button = $this->bmCreateButton(array(
-            'BUTTONTYPE' => $type,
-            'BUTTONSUBTYPE' => $subType,
+    public function createButton($name, $amount, $type = null, $subType = null, $notifyURL = null, $return = null) {
+        $args = array(
+            'BUTTONTYPE' => (empty($type) ? 'BUYNOW' : $type),
+            'BUTTONSUBTYPE' => (empty($subType) ? 'PRODUCTS' : $subType),
             'L_BUTTONVAR0' => 'item_name=' . $name,
             'L_BUTTONVAR1' => 'amount=' . $amount,
-        ));
+        );
+        
+        if ( !empty($notifyURL) ) {
+            $args['L_BUTTONVAR2'] = 'notify_url=' . $notifyURL;
+        }
+        
+        if ( !empty($return) ) {
+            $args['L_BUTTONVAR3'] = 'return=' . $return;
+            $args['L_BUTTONVAR4'] = 'rm=1';
+        }
+        
+        $button = $this->bmCreateButton($args);
         
         return ($this->callSuccess() ? $button : false);
     }
